@@ -16,8 +16,13 @@ display "E" if one of the unassigned buttons is pressed.
 
 The LCD should:
 display the decimal value 1024 on startup.
+
 display the updated decimal value after a blue button is pressed based on the specifications below.
+
 Pressing either of the black buttons should reset the system to the startup state as defined above.
+
 Pressing any of the blue buttons should subtract the value from the current value on the LCD and update the displayed value.
+
 The program should stop updating either display when the value gets to 0 or less until a reset occurs.
+
 You can assume that the user will never press more than one key or button at a time.
