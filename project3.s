@@ -1,4 +1,5 @@
 ; .equ directives for aliases
+; 8-bit segments
 .equ SEG_A,0x80
 .equ SEG_B,0x40 
 .equ SEG_C,0x20 
@@ -8,6 +9,7 @@
 .equ SEG_G,0x01 
 .equ SEG_P,0x10
 
+; 8-segment display aliases
 .equ ONE, SEG_B|SEG_C
 .equ TWO, SEG_A|SEG_B|SEG_F|SEG_E|SEG_D
 .equ THREE, SEG_A|SEG_B|SEG_F|SEG_C|SEG_D
@@ -20,12 +22,14 @@
 .equ ZERO, SEG_A|SEG_B|SEG_C|SEG_D|SEG_E|SEG_G
 .equ ERROR, SEG_A|SEG_G|SEG_F|SEG_E|SEG_D
 
+; button and LED/LCD operation aliases
 .equ PRINT_TO_LED, 0x200
 .equ CHECK_BLACK, 0x202
 .equ CHECK_BLUE, 0x203
 .equ PRINT_TO_LCD, 0x205
 .equ SWI_CLEAR_LCD, 0x206
 
+;Blue-Button press registration aliases
 .equ NUM_ZERO,  0x2000
 .equ NUM_ONE,   0x0100
 .equ NUM_TWO,   0x0200
@@ -48,11 +52,11 @@ swi PRINT_TO_LED
 swi SWI_CLEAR_LCD
 mov r0,#15
 mov r1,#10
-mov r2,#24
+mov r2,#1024
 swi PRINT_TO_LCD
 
+; Check for Blue-Button Press
 ReadBlueLoop:
-; Blue Button Num-pad Checks
 swi CHECK_BLUE
 
 cmp r0,#NUM_ONE
@@ -108,11 +112,11 @@ beq PrintERROR
 cmp r0,#0x8000
 beq PrintERROR
 
+; Print current value to LCD
 swi SWI_CLEAR_LCD
 mov r0,#15
 mov r1,#10
 swi PRINT_TO_LCD
-
 
 ; Check Black Buttons for press
 ; If pressed reset system
@@ -122,12 +126,12 @@ beq InitLoop
 cmp r0,#0x02
 beq InitLoop
 
-;cmp r2,#0
-;ble DecimalGone
+cmp r2,#0
+ble DecimalGone
 
 b ReadBlueLoop
 
-; Print to 8-Segment LED
+; Print last blue-button press to 8-Segment LED
 PrintONE:
 moveq r0,#ONE
 swi PRINT_TO_LED
@@ -183,20 +187,43 @@ mov r0,#ERROR
 swi PRINT_TO_LED
 b ReadBlueLoop
 
-;DecimalGone:
-;mov r0,#0
-;mov r1,#11
-;ldr r2,=finishString0
-;swi 0x204
-;mov r0,#0
-;mov r1,#12
-;ldr r2,=finishString1
-;swi 0x204
+; Branch to here when decimal value is 0 or less
+DecimalGone:
+mov r0,#0x00
+swi PRINT_TO_LED
+cmp r2,#0
 
+mov r0,#0
+mov r1,#11
+ldr r2,=finishString0
+swi 0x204
+mov r0,#0
+mov r1,#12
+ldr r2,=finishString1
+swi 0x204
+mov r0,#0
+mov r1,#13
+ldr r2,=finishString2
+swi 0x204
 
+ble ZeroState ;When decimal value is 0 or less, 
+              ;branch to ZeroState Trap-Loop
 
-b ReadBlueLoop
+; Trap State to hold system when decimal value is 0
+; exit trap when black button is pressed
+ZeroState:
+; Check Black Buttons for press
+; If pressed reset system
+swi CHECK_BLACK
+cmp r0,#0x01
+beq InitLoop
+cmp r0,#0x02
+beq InitLoop
+
+b ZeroState
+
 
 .data
 finishString0: .asciz "Decimal Value Reached 0 or Less"
-finishString1: .asciz "Stopping Program"
+finishString1: .asciz "***Stopping Program***"
+finishString2: .asciz "Press a Black Button to reset"
