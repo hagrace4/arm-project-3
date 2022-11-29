@@ -48,7 +48,7 @@ swi PRINT_TO_LED
 swi SWI_CLEAR_LCD
 mov r0,#15
 mov r1,#10
-mov r2,#1024
+mov r2,#24
 swi PRINT_TO_LCD
 
 ReadBlueLoop:
@@ -122,8 +122,8 @@ beq InitLoop
 cmp r0,#0x02
 beq InitLoop
 
-cmp r2,#0
-ble DecimalGone
+;cmp r2,#0
+;ble DecimalGone
 
 b ReadBlueLoop
 
@@ -183,23 +183,20 @@ mov r0,#ERROR
 swi PRINT_TO_LED
 b ReadBlueLoop
 
-DecimalGone:
-mov r0,#0
-mov r1,#11
-ldr r2,=finishString0
-swi 0x204
-mov r0,#0
-mov r1,#12
-ldr r2,=finishString1
-swi 0x204
+;DecimalGone:
+;mov r0,#0
+;mov r1,#11
+;ldr r2,=finishString0
+;swi 0x204
+;mov r0,#0
+;mov r1,#12
+;ldr r2,=finishString1
+;swi 0x204
 
-; Check Black Buttons for press
-; If pressed reset system
-swi CHECK_BLACK
-cmp r0,#0x01
-beq InitLoop
-cmp r0,#0x02
-beq InitLoop
 
+
+b ReadBlueLoop
+
+.data
 finishString0: .asciz "Decimal Value Reached 0 or Less"
 finishString1: .asciz "Stopping Program"
